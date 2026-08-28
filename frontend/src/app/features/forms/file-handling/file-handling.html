@@ -1,0 +1,97 @@
+<h2>File upload &amp; download</h2>
+
+<p class="muted">
+  Choose files with the input, or drag and drop them onto the zone. Downloads use
+  <code>Content-Disposition: attachment</code> so Playwright's download event fires.
+</p>
+
+<div class="field">
+  <label for="file-input">Choose files (max 5, 2&nbsp;MB each)</label>
+  <input id="file-input" type="file" multiple data-testid="file-input" (change)="onFileInput($event)" />
+</div>
+
+<div
+  class="dropzone"
+  [class.dragging]="dragging()"
+  data-testid="dropzone"
+  role="button"
+  tabindex="0"
+  aria-label="File drop zone"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  {{ dragging() ? 'Release to drop files' : 'Drag and drop files here' }}
+</div>
+
+@if (selected().length > 0) {
+  <table class="data-table" data-testid="file-list" style="margin-top: 1rem">
+    <caption class="visually-hidden">Selected files</caption>
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Type</th>
+        <th scope="col">Size (bytes)</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (file of selected(); track file.name) {
+        <tr>
+          <td>{{ file.name }}</td>
+          <td>{{ file.type }}</td>
+          <td>{{ file.size }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@if (uploadError(); as error) {
+  <p class="alert alert-error" role="alert" data-testid="upload-error">{{ error }}</p>
+}
+
+@if (uploadResult(); as message) {
+  <p class="alert alert-success" role="status" data-testid="upload-success">{{ message }}</p>
+}
+
+<div class="row" style="margin-top: 1rem">
+  <button type="button" class="btn btn-primary" data-testid="upload-submit" [disabled]="uploading()" (click)="upload()">
+    @if (uploading()) {
+      <span class="spinner" aria-hidden="true"></span>
+    }
+    Upload
+  </button>
+
+  <button type="button" class="btn" data-testid="upload-clear" (click)="clear()">Clear</button>
+</div>
+
+<h3 style="margin-top: 2rem">Downloads</h3>
+
+<div class="row">
+  <a class="btn" href="/api/forms/download/report.csv" download data-testid="download-csv">
+    Download report.csv
+  </a>
+
+  <a class="btn" href="/api/forms/download/notes.txt" download data-testid="download-txt">
+    Download notes.txt
+  </a>
+</div>
+
+<style>
+  .dropzone {
+    display: grid;
+    place-items: center;
+    min-height: 8rem;
+    margin-top: 1rem;
+    color: #4a5670;
+    background: #f7f9fc;
+    border: 2px dashed #b9c2d4;
+    border-radius: 0.75rem;
+  }
+
+  .dropzone.dragging {
+    color: #23386f;
+    background: #eef2fd;
+    border-color: #2745b8;
+  }
+</style>

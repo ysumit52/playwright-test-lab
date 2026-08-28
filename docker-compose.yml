@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: playwright-lab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-playwright_lab}
+      POSTGRES_USER: ${POSTGRES_USER:-playwright_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-playwright_password}
+    ports:
+      - "5433:5432"
+    volumes:
+      - playwright_lab_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-playwright_user} -d ${POSTGRES_DB:-playwright_lab} -h localhost -p 5433"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: playwright-lab-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      API_PORT: 3000
+      FRONTEND_URL: http://localhost:4200
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-playwright_lab}
+      DB_USERNAME: ${POSTGRES_USER:-playwright_user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-playwright_password}
+      DB_SYNCHRONIZE: "true"
+      COOKIE_SECRET: ${COOKIE_SECRET:-development-secret}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: playwright-lab-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  playwright_lab_postgres_data:

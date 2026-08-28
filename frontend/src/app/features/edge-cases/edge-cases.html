@@ -1,0 +1,108 @@
+<app-breadcrumbs [crumbs]="[{ label: 'Home', link: '/' }, { label: 'Edge cases' }]" />
+
+<h1 class="page-title">Edge cases</h1>
+
+<p class="page-intro">
+  Slow-appearing elements, conditional visibility, disabled&rarr;enabled
+  transitions and DOM detachment &mdash; all deterministic.
+</p>
+
+<div class="stack">
+  <section class="card" aria-labelledby="slow-heading">
+    <h2 id="slow-heading">Slow-loading element</h2>
+
+    <button type="button" class="btn" data-testid="start-slow-render" (click)="startSlowRender()">
+      Render after 3 seconds
+    </button>
+
+    @if (slowCountdown() > 0 && !slowElementVisible()) {
+      <p role="status" data-testid="slow-countdown">
+        <span class="spinner" aria-hidden="true"></span>
+        Appearing in {{ slowCountdown() }}s…
+      </p>
+    }
+
+    @if (slowElementVisible()) {
+      <p class="alert alert-success" data-testid="slow-element">
+        I finally appeared.
+      </p>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="enable-heading">
+    <h2 id="enable-heading">Disabled &rarr; enabled</h2>
+
+    <button type="button" class="btn" data-testid="arm-button" (click)="enableAfterDelay()">
+      Enable the button in 2 seconds
+    </button>
+
+    <button type="button" class="btn btn-primary" data-testid="delayed-button" [disabled]="!buttonEnabled()">
+      Now clickable
+    </button>
+  </section>
+
+  <section class="card" aria-labelledby="conditional-heading">
+    <h2 id="conditional-heading">Conditional visibility</h2>
+
+    <button type="button" class="btn" data-testid="toggle-conditional" (click)="toggleConditional()">
+      Toggle panel
+    </button>
+
+    @if (conditionalVisible()) {
+      <p class="alert alert-info" data-testid="conditional-panel">
+        Visible only while toggled on.
+      </p>
+    }
+
+    <p class="muted">
+      There is also a hidden element below that exists in the DOM but is not
+      visible.
+    </p>
+
+    <p hidden data-testid="hidden-element">You cannot see me.</p>
+  </section>
+
+  <section class="card" aria-labelledby="detach-heading">
+    <h2 id="detach-heading">Element detachment</h2>
+
+    <button type="button" class="btn" data-testid="detach-trigger" (click)="detachElement()">
+      Detach for 2 seconds
+    </button>
+
+    @if (!detached()) {
+      <p data-testid="detachable">I am attached to the DOM.</p>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="gate-heading">
+    <h2 id="gate-heading">Multi-condition enablement</h2>
+
+    <div class="field">
+      <label for="gate-name">Your name (3+ characters)</label>
+      <input id="gate-name" type="text" data-testid="gate-name" (input)="onNameInput($event)" />
+    </div>
+
+    <div class="choice">
+      <input
+        id="gate-agree"
+        type="checkbox"
+        data-testid="gate-agree"
+        [checked]="agreeChecked()"
+        (change)="agreeChecked.set($any($event.target).checked)"
+      />
+      <label for="gate-agree">I agree</label>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-testid="gate-submit"
+      [disabled]="!submitEnabled"
+      (click)="clickCount.set(clickCount() + 1)"
+    >
+      Submit
+    </button>
+
+    <p class="muted" data-testid="gate-clicks">Clicked {{ clickCount() }} time(s)</p>
+  </section>
+</div>

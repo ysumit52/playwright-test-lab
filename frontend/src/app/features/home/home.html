@@ -1,0 +1,70 @@
+<section aria-labelledby="welcome-heading">
+  <p class="eyebrow">Angular + NestJS + PostgreSQL</p>
+
+  <h1 id="welcome-heading">Automation testing playground</h1>
+
+  <p>
+    A deterministic application for practicing Playwright end-to-end tests.
+  </p>
+</section>
+
+<section class="status-card" aria-labelledby="status-heading">
+  <h2 id="status-heading">System status</h2>
+
+  @if (health$ | async; as state) {
+    @if (state.loading) {
+      <div role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        Checking API and database connectivity…
+      </div>
+    }
+
+    @if (state.error) {
+      <div role="alert" class="error">
+        The backend API could not be reached.
+      </div>
+    }
+
+    @if (state.health; as health) {
+      <dl>
+        <div>
+          <dt>API</dt>
+          <dd>
+            <span class="status-indicator success" aria-hidden="true"></span>
+            {{ health.status }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Database</dt>
+          <dd>
+            <span class="status-indicator success" aria-hidden="true"></span>
+            {{ health.database }}
+          </dd>
+        </div>
+
+        <div>
+          <dt>Checked</dt>
+          <dd>{{ health.timestamp | date: 'medium' }}</dd>
+        </div>
+      </dl>
+    }
+  }
+</section>
+
+<section class="card" aria-labelledby="features-heading" style="margin-top: 1.5rem">
+  <h2 id="features-heading">Test scenarios</h2>
+
+  <ul class="feature-grid" data-testid="feature-list">
+    @for (feature of features; track feature.link) {
+      <li>
+        <a [routerLink]="feature.link">{{ feature.title }}</a>
+        <p>{{ feature.description }}</p>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="card" aria-labelledby="test-data-heading" style="margin-top: 1.5rem">
+  <app-test-data />
+</section>

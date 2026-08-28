@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nested frame wrapper</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 1rem;
+        font-family: system-ui, sans-serif;
+        color: #172033;
+        background: #eef1f7;
+      }
+      iframe { width: 100%; height: 170px; border: 1px solid #b9c2d4; border-radius: 0.35rem; }
+    </style>
+  </head>
+  <body>
+    <h1 data-testid="outer-frame-heading">Outer frame</h1>
+
+    <iframe
+      title="Inner frame"
+      name="lab-inner-frame"
+      data-testid="lab-inner-frame"
+      src="/embedded-frame.html"
+    ></iframe>
+  </body>
+</html>

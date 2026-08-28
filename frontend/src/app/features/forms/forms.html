@@ -1,0 +1,45 @@
+<app-breadcrumbs [crumbs]="[{ label: 'Home', link: '/' }, { label: 'Forms' }]" />
+
+<h1 class="page-title">Forms</h1>
+
+<p class="page-intro">
+  Input types, validation messages, a multi-step wizard, and file upload /
+  download &mdash; organised into an ARIA tab list.
+</p>
+
+<div class="tablist" role="tablist" aria-label="Form examples">
+  @for (tab of tabs; track tab.id; let index = $index) {
+    <button
+      type="button"
+      role="tab"
+      [id]="'tab-' + tab.id"
+      [attr.aria-selected]="activeTab() === tab.id"
+      [attr.aria-controls]="'panel-' + tab.id"
+      [attr.tabindex]="activeTab() === tab.id ? 0 : -1"
+      [class.active]="activeTab() === tab.id"
+      (click)="select(tab.id)"
+      (keydown)="onTabKeydown($event, index)"
+    >
+      {{ tab.label }}
+    </button>
+  }
+</div>
+
+<div
+  class="card"
+  role="tabpanel"
+  [id]="'panel-' + activeTab()"
+  [attr.aria-labelledby]="'tab-' + activeTab()"
+>
+  @switch (activeTab()) {
+    @case ('inputs') {
+      <app-kitchen-sink-form />
+    }
+    @case ('wizard') {
+      <app-wizard-form />
+    }
+    @case ('files') {
+      <app-file-handling />
+    }
+  }
+</div>

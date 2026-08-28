@@ -1,0 +1,367 @@
+<app-breadcrumbs [crumbs]="[{ label: 'Home', link: '/' }, { label: 'Products' }]" />
+
+<h1 class="page-title">Products</h1>
+
+<p class="page-intro">
+  Sortable, filterable and paginated table with create, edit, delete and bulk
+  actions. Writes require the <strong>editor</strong> role; deletes require
+  <strong>admin</strong>.
+</p>
+
+@if (!authService.isAuthenticated()) {
+  <p class="alert alert-info" data-testid="products-signed-out">
+    You are browsing read-only. <a routerLink="/auth/login">Sign in</a> to create,
+    edit or delete products.
+  </p>
+}
+
+<div class="card toolbar">
+  <div class="field toolbar-search">
+    <label for="product-search">Search products</label>
+    <input
+      id="product-search"
+      type="search"
+      placeholder="Name or SKU"
+      data-testid="product-search"
+      [formControl]="searchControl"
+    />
+    <p class="hint">Requests are debounced by 350ms.</p>
+  </div>
+
+  <div class="field">
+    <label for="category-filter">Category</label>
+    <select
+      id="category-filter"
+      data-testid="category-filter"
+      [value]="categoryFilter()"
+      (change)="setFilter('category', $any($event.target).value)"
+    >
+      <option value="">All categories</option>
+      @for (category of categories(); track category) {
+        <option [value]="category">{{ category }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="status-filter">Status</label>
+    <select
+      id="status-filter"
+      data-testid="status-filter"
+      [value]="statusFilter()"
+      (change)="setFilter('status', $any($event.target).value)"
+    >
+      <option value="">All statuses</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ status }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="page-size">Rows per page</label>
+    <select
+      id="page-size"
+      data-testid="page-size"
+      [value]="pageSize()"
+      (change)="setPageSize($any($event.target).value)"
+    >
+      <option value="5">5</option>
+      <option value="10">10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+    </select>
+  </div>
+
+  <div class="toolbar-actions">
+    <button type="button" class="btn" data-testid="clear-filters" (click)="clearFilters()">
+      Clear filters
+    </button>
+
+    <button type="button" class="btn" data-testid="toggle-slow" (click)="toggleSlowMode()">
+      {{ slowMode() ? 'Disable' : 'Enable' }} slow mode
+    </button>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-testid="new-product"
+      [disabled]="!canWrite"
+      [title]="canWrite ? 'Create a product' : 'Requires editor or admin role'"
+      (click)="openCreate()"
+    >
+      New product
+    </button>
+  </div>
+</div>
+
+@if (selectedIds().size > 0) {
+  <div class="card bulk-bar" role="region" aria-label="Bulk actions" data-testid="bulk-bar">
+    <strong data-testid="selected-count">{{ selectedIds().size }} selected</strong>
+
+    <label class="visually-hidden" for="bulk-status">Set status for selection</label>
+    <select
+      id="bulk-status"
+      data-testid="bulk-status"
+      [disabled]="!canWrite"
+      (change)="bulkStatus($any($event.target).value); $any($event.target).value = ''"
+    >
+      <option value="">Set status…</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ status }}</option>
+      }
+    </select>
+
+    <button
+      type="button"
+      class="btn btn-danger btn-sm"
+      data-testid="bulk-delete"
+      [disabled]="!canDelete"
+      (click)="askBulkDelete()"
+    >
+      Delete selected
+    </button>
+  </div>
+}
+
+@if (loadError(); as error) {
+  <div class="alert alert-error" role="alert" data-testid="products-error">{{ error }}</div>
+}
+
+<div class="table-wrapper" aria-busy="{{ loading() }}">
+  @if (loading()) {
+    <p role="status" data-testid="products-loading">
+      <span class="spinner" aria-hidden="true"></span>
+      Loading products…
+    </p>
+  }
+
+  <table class="data-table" data-testid="products-table">
+    <caption class="visually-hidden">Product catalogue</caption>
+
+    <thead>
+      <tr>
+        <th scope="col">
+          <input
+            type="checkbox"
+            data-testid="select-all"
+            aria-label="Select all rows on this page"
+            [checked]="allSelected"
+            (change)="toggleSelectAll()"
+          />
+        </th>
+
+        @for (column of sortableColumns; track column) {
+          <th scope="col" [attr.aria-sort]="ariaSort(column)">
+            <button
+              type="button"
+              class="sort-button"
+              [attr.data-testid]="'sort-' + column"
+              (click)="sort(column)"
+            >
+              {{ column }}
+              <span aria-hidden="true">
+                {{ sortBy() === column ? (sortDir() === 'asc' ? '▲' : '▼') : '↕' }}
+              </span>
+            </button>
+          </th>
+        }
+
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (product of page()?.items ?? []; track product.id) {
+        <tr [attr.data-testid]="'row-' + product.sku">
+          <td>
+            <input
+              type="checkbox"
+              [attr.aria-label]="'Select ' + product.name"
+              [attr.data-testid]="'select-' + product.sku"
+              [checked]="isSelected(product.id)"
+              (change)="toggleSelection(product.id)"
+            />
+          </td>
+          <td>
+            {{ product.name }}
+            @if (product.featured) {
+              <span class="badge badge-draft">featured</span>
+            }
+          </td>
+          <td>{{ product.sku }}</td>
+          <td>{{ product.category }}</td>
+          <td>{{ product.price.toFixed(2) }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            <span class="badge" [class]="'badge badge-' + product.status">
+              {{ product.status }}
+            </span>
+          </td>
+          <td class="row-actions">
+            <button
+              type="button"
+              class="btn btn-sm"
+              [attr.data-testid]="'edit-' + product.sku"
+              [disabled]="!canWrite"
+              (click)="openEdit(product)"
+            >
+              Edit
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              [attr.data-testid]="'delete-' + product.sku"
+              [disabled]="!canDelete"
+              (click)="askDelete(product)"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="8" data-testid="products-empty">
+            No products match the current filters.
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (page(); as result) {
+  <nav class="pagination" aria-label="Pagination">
+    <p data-testid="pagination-summary">
+      Page {{ result.page }} of {{ result.totalPages }} — {{ result.total }} total
+    </p>
+
+    <div class="row">
+      <button
+        type="button"
+        class="btn btn-sm"
+        data-testid="page-prev"
+        [disabled]="result.page <= 1"
+        (click)="goToPage(result.page - 1)"
+      >
+        Previous
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm"
+        data-testid="page-next"
+        [disabled]="result.page >= result.totalPages"
+        (click)="goToPage(result.page + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </nav>
+}
+
+<app-modal
+  [open]="formOpen()"
+  [heading]="editing() ? 'Edit product' : 'New product'"
+  (closed)="closeForm()"
+>
+  @if (formError(); as error) {
+    <div class="alert alert-error" role="alert" data-testid="product-form-error">
+      {{ error }}
+    </div>
+  }
+
+  <form [formGroup]="productForm" (ngSubmit)="save()" novalidate>
+    <div class="field">
+      <label for="product-name">Name</label>
+      <input id="product-name" type="text" formControlName="name" data-testid="product-name" [attr.aria-invalid]="isFormFieldInvalid('name')" />
+      @if (isFormFieldInvalid('name')) {
+        <p class="field-error">Name must be at least 3 characters</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="product-sku">SKU</label>
+      <input id="product-sku" type="text" formControlName="sku" data-testid="product-sku" [attr.aria-invalid]="isFormFieldInvalid('sku')" />
+      @if (isFormFieldInvalid('sku')) {
+        <p class="field-error">SKU must be at least 3 characters</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="product-category">Category</label>
+      <select id="product-category" formControlName="category" data-testid="product-category">
+        @for (category of categories(); track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="product-price">Price</label>
+      <input id="product-price" type="number" step="0.01" min="0" formControlName="price" data-testid="product-price" />
+    </div>
+
+    <div class="field">
+      <label for="product-stock">Stock</label>
+      <input id="product-stock" type="number" min="0" formControlName="stock" data-testid="product-stock" />
+    </div>
+
+    <div class="field">
+      <label for="product-status">Status</label>
+      <select id="product-status" formControlName="status" data-testid="product-status">
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="product-description">Description</label>
+      <textarea id="product-description" formControlName="description" data-testid="product-description"></textarea>
+    </div>
+
+    <div class="choice">
+      <input id="product-featured" type="checkbox" formControlName="featured" data-testid="product-featured" />
+      <label for="product-featured">Featured product</label>
+    </div>
+
+    <div class="row">
+      <button type="submit" class="btn btn-primary" data-testid="product-save" [disabled]="saving()">
+        @if (saving()) {
+          <span class="spinner" aria-hidden="true"></span>
+        }
+        Save
+      </button>
+
+      <button type="button" class="btn" data-testid="product-cancel" (click)="closeForm()">
+        Cancel
+      </button>
+    </div>
+  </form>
+</app-modal>
+
+<app-modal
+  [open]="confirmTarget() !== null || confirmBulk()"
+  heading="Confirm delete"
+  (closed)="cancelConfirm()"
+>
+  <p data-testid="confirm-message">
+    @if (confirmTarget(); as target) {
+      Permanently delete <strong>{{ target.name }}</strong>?
+    } @else {
+      Permanently delete {{ selectedIds().size }} selected product(s)?
+    }
+  </p>
+
+  <div class="row">
+    <button type="button" class="btn btn-danger" data-testid="confirm-delete" (click)="confirmDelete()">
+      Yes, delete
+    </button>
+
+    <button type="button" class="btn" data-testid="cancel-delete" (click)="cancelConfirm()">
+      Cancel
+    </button>
+  </div>
+</app-modal>

@@ -1,0 +1,176 @@
+<h2>Every input type</h2>
+
+<p class="muted">
+  Text, email, tel, url, number, date, select, radio, checkbox group, range,
+  colour and textarea &mdash; all with labels for <code>getByLabel</code>.
+</p>
+
+@if (serverError(); as error) {
+  <div class="alert alert-error" role="alert" data-testid="contact-error">{{ error }}</div>
+}
+
+@if (result(); as message) {
+  <div class="alert alert-success" role="status" data-testid="contact-success">{{ message }}</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="grid-2">
+    <div class="field">
+      <label for="firstName">First name</label>
+      <input id="firstName" type="text" formControlName="firstName" [attr.aria-invalid]="isInvalid('firstName')" />
+      @if (isInvalid('firstName')) {
+        <p class="field-error">First name must be at least 2 characters</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="lastName">Last name</label>
+      <input id="lastName" type="text" formControlName="lastName" [attr.aria-invalid]="isInvalid('lastName')" />
+      @if (isInvalid('lastName')) {
+        <p class="field-error">Last name must be at least 2 characters</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="contact-email">Email</label>
+      <input id="contact-email" type="email" formControlName="email" [attr.aria-invalid]="isInvalid('email')" />
+      @if (isInvalid('email')) {
+        <p class="field-error">Enter a valid email address</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="phone">Phone</label>
+      <input id="phone" type="tel" formControlName="phone" [attr.aria-invalid]="isInvalid('phone')" />
+      <p class="hint">Optional. Digits, spaces, parentheses and dashes.</p>
+      @if (isInvalid('phone')) {
+        <p class="field-error">Enter a valid phone number</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="website">Website</label>
+      <input id="website" type="url" formControlName="website" [attr.aria-invalid]="isInvalid('website')" />
+      <p class="hint">Optional. Must start with http:// or https://</p>
+      @if (isInvalid('website')) {
+        <p class="field-error">Enter a full URL including the protocol</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="age">Age</label>
+      <input id="age" type="number" min="18" max="120" formControlName="age" [attr.aria-invalid]="isInvalid('age')" />
+      @if (isInvalid('age')) {
+        <p class="field-error">Age must be between 18 and 120</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="startDate">Start date</label>
+      <input id="startDate" type="date" formControlName="startDate" [attr.aria-invalid]="isInvalid('startDate')" />
+      @if (isInvalid('startDate')) {
+        <p class="field-error">Select a start date</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="plan">Plan</label>
+      <select id="plan" formControlName="plan" [attr.aria-invalid]="isInvalid('plan')">
+        <option value="">Choose a plan…</option>
+        <option value="starter">Starter</option>
+        <option value="growth">Growth</option>
+        <option value="enterprise">Enterprise</option>
+      </select>
+      @if (isInvalid('plan')) {
+        <p class="field-error">Select a plan</p>
+      }
+    </div>
+  </div>
+
+  <fieldset>
+    <legend>Preferred contact method</legend>
+
+    @for (method of ['email', 'phone', 'sms']; track method) {
+      <div class="choice">
+        <input
+          [id]="'contact-' + method"
+          type="radio"
+          [value]="method"
+          formControlName="contactMethod"
+        />
+        <label [for]="'contact-' + method">{{ method }}</label>
+      </div>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Interests</legend>
+
+    @for (interest of interests; track interest) {
+      <div class="choice">
+        <input
+          [id]="'interest-' + interest"
+          type="checkbox"
+          [checked]="isInterestChecked(interest)"
+          (change)="toggleInterest(interest, $any($event.target).checked)"
+        />
+        <label [for]="'interest-' + interest">{{ interest }}</label>
+      </div>
+    }
+
+    @if (isInvalid('interests')) {
+      <p class="field-error">Select at least one interest</p>
+    }
+  </fieldset>
+
+  <div class="grid-2">
+    <div class="field">
+      <label for="satisfaction">Satisfaction ({{ form.controls.satisfaction.value }}/10)</label>
+      <input id="satisfaction" type="range" min="1" max="10" formControlName="satisfaction" />
+    </div>
+
+    <div class="field">
+      <label for="favouriteColour">Favourite colour</label>
+      <input id="favouriteColour" type="color" formControlName="favouriteColour" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="message">Message</label>
+    <textarea id="message" formControlName="message" [attr.aria-invalid]="isInvalid('message')"></textarea>
+    @if (isInvalid('message')) {
+      <p class="field-error">Message is required</p>
+    }
+  </div>
+
+  <div class="choice">
+    <input id="acceptTerms" type="checkbox" formControlName="acceptTerms" />
+    <label for="acceptTerms">I accept the terms of service</label>
+  </div>
+  @if (isInvalid('acceptTerms')) {
+    <p class="field-error">You must accept the terms</p>
+  }
+
+  <div class="row">
+    <button type="submit" class="btn btn-primary" data-testid="contact-submit" [disabled]="pending()">
+      @if (pending()) {
+        <span class="spinner" aria-hidden="true"></span>
+      }
+      Submit
+    </button>
+
+    <button type="button" class="btn" data-testid="contact-reset" (click)="reset()">Reset</button>
+
+    <span class="muted" data-testid="form-validity">
+      Form is {{ form.valid ? 'valid' : 'invalid' }}
+    </span>
+  </div>
+</form>
+
+<style>
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0 1rem;
+  }
+</style>

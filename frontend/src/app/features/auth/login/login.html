@@ -1,0 +1,82 @@
+<app-breadcrumbs [crumbs]="[{ label: 'Home', link: '/' }, { label: 'Sign in' }]" />
+
+<h1 class="page-title">Sign in</h1>
+
+<p class="page-intro">
+  Seeded accounts all use the password <code>Password123!</code>. Try
+  <code>admin&#64;lab.test</code>, <code>editor&#64;lab.test</code>,
+  <code>viewer&#64;lab.test</code>, or <code>disabled&#64;lab.test</code>.
+</p>
+
+<div class="card login-card">
+  @if (errorMessage()) {
+    <div class="alert alert-error" role="alert" data-testid="login-error">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
+    <div class="field">
+      <label for="email">Email</label>
+
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+        data-testid="login-email"
+        [attr.aria-invalid]="isInvalid('email')"
+        [attr.aria-describedby]="isInvalid('email') ? 'email-error' : null"
+      />
+
+      @if (isInvalid('email')) {
+        <p id="email-error" class="field-error">Enter a valid email address</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+
+      <input
+        id="password"
+        [type]="showPassword() ? 'text' : 'password'"
+        formControlName="password"
+        autocomplete="current-password"
+        data-testid="login-password"
+        [attr.aria-invalid]="isInvalid('password')"
+        [attr.aria-describedby]="isInvalid('password') ? 'password-error' : null"
+      />
+
+      <div class="choice">
+        <input
+          id="show-password"
+          type="checkbox"
+          [checked]="showPassword()"
+          (change)="showPassword.set(!showPassword())"
+        />
+        <label for="show-password">Show password</label>
+      </div>
+
+      @if (isInvalid('password')) {
+        <p id="password-error" class="field-error">Password is required</p>
+      }
+    </div>
+
+    <div class="row">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        data-testid="login-submit"
+        [disabled]="pending()"
+      >
+        @if (pending()) {
+          <span class="spinner" aria-hidden="true"></span>
+        }
+        Sign in
+      </button>
+
+      <a routerLink="/auth/signup">Create an account</a>
+      <a routerLink="/auth/forgot-password">Forgot password?</a>
+    </div>
+  </form>
+</div>

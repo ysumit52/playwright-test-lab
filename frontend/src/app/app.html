@@ -1,0 +1,30 @@
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header class="app-header">
+  <div class="container">
+    <a class="brand" routerLink="/" aria-label="Playwright Test Lab home">
+      Playwright Test Lab
+    </a>
+
+    <nav aria-label="Main navigation">
+      @for (link of links; track link.path) {
+        <a [routerLink]="link.path" routerLinkActive="active">{{ link.label }}</a>
+      }
+    </nav>
+
+    <div class="session" data-testid="session-status">
+      @if (authService.user(); as user) {
+        <a routerLink="/profile" data-testid="session-user">{{ user.email }}</a>
+        <span class="badge badge-active">{{ user.role }}</span>
+      } @else {
+        <a routerLink="/auth/login" data-testid="session-signin">Sign in</a>
+      }
+    </div>
+  </div>
+</header>
+
+<main id="main-content" class="container" tabindex="-1">
+  <router-outlet />
+</main>
+
+<app-toast-host />
