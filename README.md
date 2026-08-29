@@ -821,4 +821,4 @@ http://localhost:4200
 
 ## License
 
-Add the project's license information here.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
