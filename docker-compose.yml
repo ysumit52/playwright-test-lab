@@ -1,59 +1,37 @@
 services:
-  postgres:
+  db:
     image: postgres:17-alpine
-    container_name: playwright-lab-postgres
+    container_name: orders-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-playwright_lab}
-      POSTGRES_USER: ${POSTGRES_USER:-playwright_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-playwright_password}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     ports:
-      - "5433:5432"
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
     volumes:
-      - playwright_lab_postgres_data:/var/lib/postgresql/data
+      - orders_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-playwright_user} -d ${POSTGRES_DB:-playwright_lab} -h localhost -p 5433"
-        ]
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
       interval: 5s
       timeout: 5s
       retries: 10
 
-  backend:
+  api:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: playwright-lab-backend
+    container_name: orders-api
     restart: unless-stopped
-    environment:
-      NODE_ENV: development
-      API_PORT: 3000
-      FRONTEND_URL: http://localhost:4200
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-playwright_lab}
-      DB_USERNAME: ${POSTGRES_USER:-playwright_user}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-playwright_password}
-      DB_SYNCHRONIZE: "true"
-      COOKIE_SECRET: ${COOKIE_SECRET:-development-secret}
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: playwright-lab-frontend
-    restart: unless-stopped
-    ports:
-      - "4200:80"
-    depends_on:
-      - backend
-
 volumes:
-  playwright_lab_postgres_data:
+  orders_postgres_data:
