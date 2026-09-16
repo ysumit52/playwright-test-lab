@@ -1,1 +1,0 @@
-import{s as ke}from"./main-75Q63QKB.js";function s(r,t=`Something went wrong`){if(!(r instanceof ke))return t;if(r.status===0)return`The API could not be reached`;let n=r.error?.message;return Array.isArray(n)?n.join(`, `):typeof n==`string`?n:t}export{s as t};

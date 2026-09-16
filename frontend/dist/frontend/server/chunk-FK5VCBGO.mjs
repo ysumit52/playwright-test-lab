@@ -1,2 +1,0 @@
-import './polyfills.server.mjs';
-import{Ib as n,Va as i,pb as e,qb as t}from"./chunk-YVGESSIQ.mjs";import"./chunk-NFYOW3OZ.mjs";var m=class a{static \u0275fac=function(o){return new(o||a)};static \u0275cmp=i({type:a,selectors:[["app-not-found"]],decls:7,vars:0,consts:[["href","/"]],template:function(o,s){o&1&&(e(0,"main")(1,"h1"),n(2,"Page not found"),t(),e(3,"p"),n(4,"The requested page does not exist."),t(),e(5,"a",0),n(6,"Return home"),t()())},encapsulation:2})};export{m as NotFound};

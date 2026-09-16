@@ -1,2 +1,0 @@
-import './polyfills.server.mjs';
-import{I as n,ca as o}from"./chunk-YVGESSIQ.mjs";var a=class r{nextId=1;toasts=o([]);show(t,s,e=5e3){let i=this.nextId++;return this.toasts.update(d=>[...d,{id:i,kind:t,message:s}]),e>0&&setTimeout(()=>this.dismiss(i),e),i}success(t){return this.show("success",t)}error(t){return this.show("error",t)}info(t){return this.show("info",t)}dismiss(t){this.toasts.update(s=>s.filter(e=>e.id!==t))}clear(){this.toasts.set([])}static \u0275fac=function(s){return new(s||r)};static \u0275prov=n({token:r,factory:r.\u0275fac,providedIn:"root"})};export{a};
